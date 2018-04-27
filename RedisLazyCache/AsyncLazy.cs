@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace LazyCache
+namespace RedisLazyCache
 {
     public class AsyncLazy<T> : Lazy<Task<T>>
     {

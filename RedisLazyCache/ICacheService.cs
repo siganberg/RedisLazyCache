@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace LazyCache
+namespace RedisLazyCache
 {
     public interface ICacheService
     {

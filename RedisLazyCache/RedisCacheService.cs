@@ -9,19 +9,19 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace LazyCache
+namespace RedisLazyCache
 {
-    public class LazyCacheService : ICacheService
+    public class RedisCacheService : ICacheService
     {
         private readonly IDistributedCache _disributedCache;
         private readonly IMemoryCache _memoryCache;
-        private readonly ConcurrentDictionary<string, SemaphoreSlim> _lockers = new ConcurrentDictionary<string, SemaphoreSlim>();
-        private readonly ILogger<LazyCacheService> _logger;
-        private readonly IConfiguration _config; 
-        
-        private bool UseDistributiveCache => !string.IsNullOrEmpty(_config["ConnectionStrings:Redis"]);
+        private readonly ILogger<RedisCacheService> _logger;
+        private readonly IConfiguration _config;
 
-        public LazyCacheService(IDistributedCache cache, IMemoryCache memoryCache, ILogger<LazyCacheService> logger, IConfiguration config)
+        private readonly ConcurrentDictionary<string, SemaphoreSlim> _lockers = new ConcurrentDictionary<string, SemaphoreSlim>();
+        private bool UseDistributedCache => !string.IsNullOrEmpty(_config["ConnectionStrings:Redis"]);
+
+        public RedisCacheService(IDistributedCache cache, IMemoryCache memoryCache, ILogger<RedisCacheService> logger, IConfiguration config)
         {
             _disributedCache = cache;
             _logger = logger;
@@ -69,7 +69,7 @@ namespace LazyCache
                 var cacheObject = _memoryCache.Get<T>(key);
                 if (cacheObject != null) return cacheObject;
 
-                if (!UseDistributiveCache) return default(T);
+                if (!UseDistributedCache) return default(T);
 
                 var byteCache = _disributedCache.Get(key);
                 if (byteCache == null) return default(T);
@@ -86,7 +86,7 @@ namespace LazyCache
         {
             try
             {
-                if (!UseDistributiveCache)
+                if (!UseDistributedCache)
                 {
                     _memoryCache.Set(key, items, DateTimeOffset.UtcNow.AddSeconds(expirationInSeconds));
                     return;
